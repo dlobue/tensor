@@ -12,8 +12,7 @@
 (defn dir-loader [pkg]
   (load (pkg-to-path pkg)))
 
-;(def ^:dynamic *streams* (atom {}))
-(declare *streams*)
+(declare ^:dynamic *streams*)
 
 (defn get-stream [streamname]
   (let [streamname (keyword streamname)]
