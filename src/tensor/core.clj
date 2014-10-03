@@ -37,6 +37,11 @@
 (defn def-stream-fn [streamname body]
   (swap! *streams* assoc (keyword (str *ns*) streamname) body))
 
-(defmacro def-stream [streamname params body]
-  `(def-stream-fn ~(name streamname)
-     (fn ~params ~body)))
+(defmacro def-stream [streamname params & body]
+  ;; TODO: add documentation that explains that the return body must
+  ;; return a single riemann-compatible stream. That if there are
+  ;; multiple streams in the body they must be surrounded by an `sdo`
+  ;; or they will be disregarded.
+  ;; TODO: support metadata and doc strings on def-stream
+ `(def-stream-fn ~(name streamname)
+     (fn ~params ~@body)))
