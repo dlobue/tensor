@@ -34,6 +34,11 @@
         env (zipmap (map keyword symbols) symbols)]
     `(load-streams-fn ~env ~@(map keyword streamnames))))
 
+;; TODO: totally need a better name
+(defmacro with-local-streams [& body]
+  `(binding [*streams* (atom {})]
+     ~@body))
+
 (defn def-stream-fn [streamname body]
   (swap! *streams* assoc (keyword (str *ns*) streamname) body))
 
