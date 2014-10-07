@@ -1,6 +1,7 @@
 (ns tensor.test
   (:require [tensor.core :refer :all]
             [clojure.data :as data]
+            [clojure.test :refer [join-fixtures]]
             riemann.logging
             [riemann.test :refer [with-test-env] :as test]
             [riemann.time.controlled :as time.controlled]))
@@ -24,8 +25,6 @@
 
 (defn load-streams-fixture-fn [env & stream-names]
   (fn [f]
-    (reset! *streams* {})
-    (reset! test/*taps* {})
     (binding [test/*streams* [(apply load-streams-fn env stream-names)]]
       (f))))
 
@@ -54,6 +53,11 @@
       ;; riemann style
       (f))))
 
+(defmacro tensor-fixtures [& args]
+  `(join-fixtures [setup-test-env-fixture
+                   tensor-results-fixture
+                   controlled-time-fixture
+                   (load-streams-fixture ~@args)]))
 
 ;; Result helpers
 
