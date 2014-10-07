@@ -6,7 +6,6 @@
             [riemann.time.controlled :as time.controlled]))
 
 
-;; TODO: create fixture that redefs' riemann's tap-stream with ours
 (defn tap-stream
   [name child]
   ;; TODO: ensure that *results* is bound and :type metadata is :tensor
