@@ -35,7 +35,7 @@
     `(load-streams-fn ~env ~@(map keyword streamnames))))
 
 ;; TODO: totally need a better name
-(defmacro with-local-streams [& body]
+(defmacro with-reloadable-streams [& body]
   `(binding [*streams* (atom {})]
      ~@body))
 
