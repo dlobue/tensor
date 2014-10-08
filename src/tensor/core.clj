@@ -34,7 +34,7 @@
 
 (defn load-streams-fn [env & streamnames]
   (debug "Loading streams " streamnames)
-  (apply sdo (map #(apply load-stream-fn (keyword %) env []) streamnames)))
+  (apply sdo (doall (map #(apply load-stream-fn (keyword %) env []) streamnames))))
 
 (defmacro load-streams [& streamnames]
   (let [symbols (keys &env)
