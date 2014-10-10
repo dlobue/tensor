@@ -3,6 +3,6 @@
   :url "https://github.com/dlobue/tensor"
   :license {:name "Apache License 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.html"}
-  :profile {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
                                  [riemann "0.2.6"]]}}
   :dependencies [[org.clojure/tools.logging "0.2.6"]])
