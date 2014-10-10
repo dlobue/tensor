@@ -4,5 +4,6 @@
   :license {:name "Apache License 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.html"}
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
-                                 [riemann "0.2.6"]]}}
+                                 [riemann "0.2.6"]]
+                   :resource-paths ["test/resources"]}}
   :dependencies [[org.clojure/tools.logging "0.2.6"]])
