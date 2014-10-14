@@ -190,13 +190,13 @@
   of tap names to the events each tap received. Absolutely NOT threadsafe;
   riemann.time.controlled is global. Streams may be omitted, in which case
   inject! applies events to the *streams* dynamic var."
+  ([events]
+   (send-events! nil events))
   ([opts events]
    (send-events! test/*streams* opts events))
   ([streams opts events]
-     (let [[opts events] (if (some #{:event-base :end-time} (keys opts))
-                           [opts events]
-                           [nil (cons opts events)])
-           event-defaults {:host :default-host :service :default-service}
+     (let [event-defaults {:host :default-host :service :default-service}
+           ;; TODO: re-enable next when given a certain option
            ;; event-update (comp riemann.common/event
            ;;                    (partial merge event-defaults (:event-base opts)))
            event-update (partial merge event-defaults (:event-base opts))
