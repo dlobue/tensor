@@ -146,7 +146,7 @@
             :message report-message
             :expected (list expected-tap-name expected-event)
             :actual (list actual-tap-name value-actual)
-            :diffs [[value-actual
+            :diffs [[(list actual-tap-name value-actual)
                      (take 2
                            (data/diff expected-event
                                       value-actual))]]})))
