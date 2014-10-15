@@ -105,13 +105,17 @@
   [`match-map`](#match-map).
 
   Resets `*external-reports*` after each call."
-  [& call-defs]
+  [opts & call-defs]
   {:pre [(even? (count call-defs))]}
   ;; TODO: ensure test/*results* type is tensor
   (let [results @test/*results*
         ;; TODO: need to reset *results* atom NOW to prevent
         ;; race-conditions where new events are added to *results*
         ;; while we're evaluating tests.
+        results (filter
+                 (complement #(contains? (set (:ignore-taps opts))
+                                         (first %)))
+                 results)
         calls (partition 2 call-defs)
         indexed-reports (map-indexed vector results)
         ]
@@ -150,7 +154,6 @@
                      (take 2
                            (data/diff expected-event
                                       value-actual))]]})))
-
       (partition 2
                  (interleave results (lazy-cat calls (repeat [nil nil]))))))
 
@@ -158,9 +161,9 @@
 
 (defn check-taps [& args]
   (if (empty? args)
-    (check-taps-fn)
+    (check-taps-fn nil)
 
-    (let [opt-keys #{:event-base :sole-tap-key}
+    (let [opt-keys #{:event-base :sole-tap-key :ignore-taps}
           [opts args] (if (some (first args) opt-keys)
                         [(first args) (rest args)]
                         [{} args])
@@ -176,10 +179,10 @@
         ;; TODO: throw exception or error or something!
         nil)
       (apply check-taps-fn
+             opts
              (if (not (nil? sole-tap-key))
                (mapcat bplate-gen  (repeat sole-tap-key) args)
-               (mapcat bplate-gen (partition 2 args)))
-             ))))
+               (mapcat bplate-gen (partition 2 args)))))))
 
 
 ;; Inject helpers
