@@ -12,7 +12,9 @@
   ;; TODO: ensure that *results* is bound and :type metadata is :tensor
   (fn stream [event]
     ;; Record event
-    (swap! test/*results* conj (list name event))))
+    (swap! test/*results* conj (list name event))
+    ;; Forward downstream
+    (child event)))
 
 
 ;; Fixtures
