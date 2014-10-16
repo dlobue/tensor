@@ -20,7 +20,6 @@
 ;; Fixtures
 
 (defn setup-test-env-fixture [f]
-  (riemann.logging/init)
   (with-test-env
     (binding [*streams* (atom {})]
       (f))))
