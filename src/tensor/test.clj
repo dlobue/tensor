@@ -153,8 +153,8 @@
             :actual (list actual-tap-name value-actual)
             :diffs [[(list actual-tap-name value-actual)
                      (take 2
-                           (data/diff expected-event
-                                      value-actual))]]})))
+                           (data/diff (list expected-tap-name expected-event)
+                                      (list actual-tap-name value-actual)))]]})))
       (partition 2
                  (interleave results (lazy-cat calls (repeat [nil nil]))))))
 
