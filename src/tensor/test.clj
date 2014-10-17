@@ -2,6 +2,7 @@
   (:require [tensor.core :refer :all]
             [clojure.data :as data]
             [clojure.test :refer [join-fixtures]]
+            [medley.core :refer [deref-reset!]]
             riemann.logging
             [riemann.test :refer [with-test-env] :as test]
             [riemann.time.controlled :as time.controlled]))
@@ -109,10 +110,7 @@
   [opts & call-defs]
   {:pre [(even? (count call-defs))]}
   ;; TODO: ensure test/*results* type is tensor
-  (let [results @test/*results*
-        ;; TODO: need to reset *results* atom NOW to prevent
-        ;; race-conditions where new events are added to *results*
-        ;; while we're evaluating tests.
+  (let [results (deref-reset! test/*results* [])
         results (filter
                  (complement #(contains? (set (:ignore-taps opts))
                                          (first %)))
@@ -156,9 +154,7 @@
                            (data/diff (list expected-tap-name expected-event)
                                       (list actual-tap-name value-actual)))]]})))
       (partition 2
-                 (interleave results (lazy-cat calls (repeat [nil nil]))))))
-
-    (reset! test/*results* [])))
+                 (interleave results (lazy-cat calls (repeat [nil nil]))))))))
 
 (defn check-taps [& args]
   (if (empty? args)

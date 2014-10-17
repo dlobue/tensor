@@ -6,4 +6,5 @@
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
                                  [riemann "0.2.6"]]
                    :resource-paths ["test/resources"]}}
-  :dependencies [[org.clojure/tools.logging "0.2.6"]])
+  :dependencies [[org.clojure/tools.logging "0.2.6"]
+                 [medley "0.5.1"]])
