@@ -25,16 +25,15 @@
     (binding [*streams* (atom {})]
       (f))))
 
-(defn load-streams-fixture-fn [env & stream-names]
+(defn load-streams-fixture-fn [env stream-names]
   (fn [f]
-    (binding [test/*streams* [(apply load-streams-fn env stream-names)]]
+    (binding [test/*streams* [(load-streams-fn env stream-names)]]
       (f))))
 
 (defmacro load-streams-fixture [env & stream-names]
   (let [stream-names (if (map? env) stream-names (cons env stream-names))
-        stream-names (map keyword stream-names)
         env (if (map? env) env {})]
-    `(load-streams-fixture-fn ~env ~@stream-names)))
+    `(load-streams-fixture-fn ~env '~stream-names)))
 
 (defn controlled-time-fixture [f]
   (time.controlled/with-controlled-time!

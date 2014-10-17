@@ -1,6 +1,7 @@
 (ns tensor.core
   (:require [clojure.string :as string]
             [clojure.tools.logging :refer :all]
+            [medley.core :refer [filter-keys]]
             [riemann.streams :refer [sdo]]))
 
 (defn pkg-to-path
@@ -15,31 +16,79 @@
   (load (pkg-to-path pkg)))
 
 (declare ^:dynamic *streams*)
+;; TODO: see if we can use metadata to ensure that *streams* is always
+;; an atom containing a map.
 
 (defn get-stream [streamname]
-  (let [streamname (keyword streamname)]
+  (let [streamname (keyword streamname)
+        ;; if namespace returns nil, that means that no specific
+        ;; stream identifiers were given, and we need to load every
+        ;; stream we find in the namespace
+        load-all? (nil? (namespace streamname))
+        get-stream' (if-not load-all?
+                      (fn [sname] (get @*streams* sname))
+                      (fn [stream-ns]
+                        (let [stream-ns (name stream-ns)]
+                          (vals
+                           (filter-keys
+                            (fn [k]
+                              (= (namespace k)
+                                 stream-ns))
+                            @*streams*)))))]
     (debug "Getting stream " streamname)
-    (if-let [stream (streamname @*streams*)]
+    (if-let [stream (get-stream' streamname)]
       stream
       (do
         (debug "Stream " streamname " yet not in registry")
-        (dir-loader (namespace streamname))
-        (streamname @*streams*)))))
+        (dir-loader (or (namespace streamname)
+                        (name streamname)))
+        (get-stream' streamname)))))
 
-(defn load-stream-fn [streamname env & body]
-  (let [stream (get-stream streamname)]
-    (debug "Loading stream " streamname)
-    (trace "Loading stream " streamname "with env: " env)
-    (apply stream env body)))
+(defn load-stream-fn
+  ([streamname env]
+     (load-stream-fn streamname env []))
+  ([streamname env body]
+     (let [stream (get-stream streamname)]
+       (debug "Loading stream " streamname)
+       (trace "Loading stream " streamname "with env: " env)
+       (if (coll? stream)
+         (doall (map #(apply % env body) stream))
+         (apply stream env body)))))
 
-(defn load-streams-fn [env & streamnames]
-  (debug "Loading streams " streamnames)
-  (apply sdo (doall (map #(apply load-stream-fn (keyword %) env []) streamnames))))
+(defn load-streams-fn [env streamspecs]
+  (let [streamspecs (if (sequential? streamspecs)
+                      streamspecs
+                      [streamspecs])]
+    (debug "Loading streams " streamspecs)
+    (apply sdo
+           (flatten
+            (for [streamspec streamspecs
+                  :let [streamname (keyword (if (sequential? streamspec)
+                                              (first streamspec)
+                                              streamspec))
+                        args (when (sequential? streamspec)
+                               (rest streamspec))]]
+              (load-stream-fn streamname env args))))))
+
+(defn- update-env [opts env]
+  (if (empty? opts)
+    env
+    (if-let [env' (:env opts)]
+      env'
+      (let [remover (if-let [env-only (:env-only opts)]
+                      #(select-keys % env-only)
+                      #(apply dissoc % (:env-exclude opts)))]
+        (-> env
+            remover
+            (merge (:env-include opts)))))))
 
 (defmacro load-streams [& streamnames]
   (let [symbols (keys &env)
-        env (zipmap (map keyword symbols) symbols)]
-    `(load-streams-fn ~env ~@(map keyword streamnames))))
+        env (zipmap (map keyword symbols) symbols)
+        [streamnames opts] (split-with (complement keyword?) streamnames)
+        opts (apply hash-map opts)
+        env (update-env opts env)]
+    `(load-streams-fn ~env '~streamnames)))
 
 (defmacro with-reloadable-streams [& body]
   `(binding [*streams* (atom {})]
