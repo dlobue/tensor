@@ -56,7 +56,7 @@
   ([streamname env body]
      (let [stream (get-stream streamname)]
        (debug "Loading stream " streamname)
-       (trace "Loading stream " streamname "with env: " env)
+       (trace "Loading stream " stream " with env: " env)
        (if (coll? stream)
          (doall (map #(apply % env body) stream))
          (apply stream env body)))))
