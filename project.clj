@@ -1,4 +1,4 @@
-(defproject tensor "0.1.0-SNAPSHOT"
+(defproject tensor "0.2.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "https://github.com/dlobue/tensor"
   :license {:name "Apache License 2.0"
