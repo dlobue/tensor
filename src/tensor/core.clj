@@ -29,12 +29,15 @@
                       (fn [sname] (get @*streams* sname))
                       (fn [stream-ns]
                         (let [stream-ns (name stream-ns)]
-                          (vals
-                           (filter-keys
-                            (fn [k]
-                              (= (namespace k)
-                                 stream-ns))
-                            @*streams*)))))]
+                          (filter
+                           (complement
+                            #(:wildcard-exclude (meta %)))
+                           (vals
+                            (filter-keys
+                             (fn [k]
+                               (= (namespace k)
+                                  stream-ns))
+                             @*streams*))))))]
     (debug "Getting stream " streamname)
     (if-let [stream (get-stream' streamname)]
       stream
@@ -99,11 +102,13 @@
     (debug "Creating stream " streamname)
     (swap! *streams* assoc streamname body)))
 
-(defmacro def-stream [streamname params & body]
+(defmacro def-stream [streamname & decl]
   ;; TODO: add documentation that explains that the return body must
   ;; return a single riemann-compatible stream. That if there are
   ;; multiple streams in the body they must be surrounded by an `sdo`
   ;; or they will be disregarded.
   ;; TODO: support metadata and doc strings on def-stream
  `(def-stream-fn ~(name streamname)
-     (fn ~params ~@body)))
+    (with-meta (fn ~@decl)
+      ~(merge (meta streamname)
+              (meta decl)))))
