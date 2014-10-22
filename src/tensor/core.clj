@@ -1,7 +1,7 @@
 (ns tensor.core
   (:require [clojure.string :as string]
             [clojure.tools.logging :refer :all]
-            [medley.core :refer [filter-keys]]
+            [medley.core :refer [filter-keys deref-swap!]]
             [riemann.streams :refer [sdo]]))
 
 (defn pkg-to-path
@@ -100,7 +100,8 @@
 (defn def-stream-fn [streamname body]
   (let [streamname (keyword (str *ns*) streamname)]
     (debug "Creating stream " streamname)
-    (swap! *streams* assoc streamname body)))
+    (if-not (deref-swap! *streams* assoc streamname body)
+      (warn "Overriding already-existing stream " streamname))))
 
 (defmacro def-stream [streamname & decl]
   ;; TODO: add documentation that explains that the return body must
