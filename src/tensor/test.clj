@@ -22,7 +22,7 @@
 
 (defn setup-test-env-fixture [f]
   (with-test-env
-    (binding [*streams* (atom {})]
+    (with-reloadable-streams
       (f))))
 
 (defn load-streams-fixture-fn [env stream-names]

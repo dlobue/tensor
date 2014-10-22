@@ -7,4 +7,5 @@
                                  [riemann "0.2.6"]]
                    :resource-paths ["test/resources"]}}
   :dependencies [[org.clojure/tools.logging "0.2.6"]
+                 [com.stuartsierra/dependency "0.1.1"]
                  [medley "0.5.1"]])

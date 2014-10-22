@@ -1,6 +1,8 @@
 (ns tensor.core
   (:require [clojure.string :as string]
             [clojure.tools.logging :refer :all]
+            [clojure.walk :refer [prewalk]]
+            [com.stuartsierra.dependency :as dep]
             [medley.core :refer [filter-keys deref-swap!]]
             [riemann.streams :refer [sdo]]))
 
@@ -15,6 +17,7 @@
   (debug "Loading package " pkg)
   (load (pkg-to-path pkg)))
 
+(declare ^:dynamic *dag*)
 (declare ^:dynamic *streams*)
 ;; TODO: see if we can use metadata to ensure that *streams* is always
 ;; an atom containing a map.
@@ -94,8 +97,28 @@
     `(load-streams-fn ~env '~streamnames)))
 
 (defmacro with-reloadable-streams [& body]
-  `(binding [*streams* (atom {})]
+  `(binding [*streams* (atom {})
+             *dag* (atom (dep/graph))]
      ~@body))
+
+
+
+(defn- register-deps [parent]
+  (fn [form]
+    (when (coll? form)
+      (cond
+       (= 'load-streams (first form))
+       (doseq [streamspec (take-while (complement keyword?) (rest form))]
+         ;;TODO: need to handle wildcard case
+         ;;TODO: replace underscores in streamspec with dashes to
+         ;;compensate for typos
+         (swap! *dag* dep/depend parent (keyword
+                                         (if (list? streamspec)
+                                           (first streamspec)
+                                           streamspec))))
+       (some coll? form) form))))
+
+
 
 (defn def-stream-fn [streamname body]
   (let [streamname (keyword (str *ns*) streamname)]
@@ -108,7 +131,8 @@
   ;; return a single riemann-compatible stream. That if there are
   ;; multiple streams in the body they must be surrounded by an `sdo`
   ;; or they will be disregarded.
-  ;; TODO: support metadata and doc strings on def-stream
+  ;; TODO: support doc strings on def-stream
+  (prewalk (register-deps (keyword (str *ns*) (name streamname))) decl)
  `(def-stream-fn ~(name streamname)
     (with-meta (fn ~@decl)
       ~(merge (meta streamname)
