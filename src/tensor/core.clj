@@ -32,15 +32,16 @@
                       (fn [sname] (get @*streams* sname))
                       (fn [stream-ns]
                         (let [stream-ns (name stream-ns)]
-                          (filter
-                           (complement
-                            #(:wildcard-exclude (meta %)))
-                           (vals
-                            (filter-keys
-                             (fn [k]
-                               (= (namespace k)
-                                  stream-ns))
-                             @*streams*))))))]
+                          (seq
+                           (filter
+                            (complement
+                             #(:wildcard-exclude (meta %)))
+                            (vals
+                             (filter-keys
+                              (fn [k]
+                                (= (namespace k)
+                                   stream-ns))
+                              @*streams*)))))))]
     (debug "Getting stream " streamname)
     (if-let [stream (get-stream' streamname)]
       stream
