@@ -1,5 +1,5 @@
 (defproject tensor "0.2.0-SNAPSHOT"
-  :description "FIXME: write description"
+  :description "A Riemann library for organizing your configuration"
   :url "https://github.com/dlobue/tensor"
   :license {:name "Apache License 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.html"}
