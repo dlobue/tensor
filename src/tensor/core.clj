@@ -68,14 +68,15 @@
                       [streamspecs])]
     (debug "Loading streams " streamspecs)
     (apply sdo
-           (flatten
-            (for [streamspec streamspecs
-                  :let [streamname (keyword (if (sequential? streamspec)
-                                              (first streamspec)
-                                              streamspec))
-                        args (when (sequential? streamspec)
-                               (rest streamspec))]]
-              (load-stream-fn streamname env args))))))
+           (doall
+            (flatten
+             (for [streamspec streamspecs
+                   :let [streamname (keyword (if (sequential? streamspec)
+                                               (first streamspec)
+                                               streamspec))
+                         args (when (sequential? streamspec)
+                                (rest streamspec))]]
+               (load-stream-fn streamname env args)))))))
 
 (defn- update-env [opts env]
   (if (empty? opts)
