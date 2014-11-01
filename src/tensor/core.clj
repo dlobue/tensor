@@ -87,8 +87,14 @@
     (if-let [env' (:env opts)]
       env'
       (let [remover (if-let [env-only (:env-only opts)]
-                      #(select-keys % env-only)
-                      #(apply dissoc % (:env-exclude opts)))]
+                      #(select-keys % (if-not (sequential? env-only)
+                                        [env-only]
+                                        env-only))
+                      (let [env-exclude (:env-exclude opts)
+                            env-exclude (if-not (sequential? env-exclude)
+                                          [env-exclude]
+                                          env-exclude)]
+                        #(apply dissoc % env-exclude)))]
         (-> env
             remover
             (merge (:env-include opts)))))))
