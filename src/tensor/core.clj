@@ -54,11 +54,28 @@
           (throw (ex-info (str "Stream " streamname " not found")
                          {:type :no-stream-found})))))))
 
+(defn- streamspec-walker [transform-fn env]
+  (fn [element]
+    (let [[element' & r] (if (list? element) element [element])]
+      (if (and (symbol? element')
+               (nil? (resolve element'))
+               (not (contains? env (keyword element'))))
+        (transform-fn element' env r)
+        element))))
+
 (defn load-stream-fn
   ([streamname env]
      (load-stream-fn streamname env nil))
   ([streamname env body]
-     (let [stream (get-stream streamname)]
+     (let [stream (get-stream streamname)
+           body (when-not (empty? body)
+                  (let [b
+                        (prewalk (streamspec-walker load-stream-fn env) body)]
+                    ;; ugh
+                    (if-not (or (vector? b)
+                                (list? b))
+                      (list b)
+                      b)))]
        (debug "Loading stream " streamname)
        (trace "Loading stream " stream " with env: " env)
        (if (coll? stream)
