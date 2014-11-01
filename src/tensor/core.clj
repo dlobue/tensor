@@ -6,14 +6,14 @@
             [medley.core :refer [filter-keys deref-swap!]]
             [riemann.streams :refer [sdo]]))
 
-(defn pkg-to-path
+(defn- pkg-to-path
   [pkg]
   (as-> pkg p
         (string/replace p #"-" "_")
         (string/replace p #"\." "/")
         (str "/" p)))
 
-(defn dir-loader [pkg]
+(defn- dir-loader [pkg]
   (debug "Loading package " pkg)
   (load (pkg-to-path pkg)))
 
@@ -53,7 +53,7 @@
 
 (defn load-stream-fn
   ([streamname env]
-     (load-stream-fn streamname env []))
+     (load-stream-fn streamname env nil))
   ([streamname env body]
      (let [stream (get-stream streamname)]
        (debug "Loading stream " streamname)
@@ -103,15 +103,12 @@
              *dag* (atom (dep/graph))]
      ~@body))
 
-
-
 (defn- register-deps [parent]
   (fn [form]
     (when (coll? form)
       (cond
        (= 'load-streams (first form))
        (doseq [streamspec (take-while (complement keyword?) (rest form))]
-         ;;TODO: need to handle wildcard case
          ;;TODO: replace underscores in streamspec with dashes to
          ;;compensate for typos
          (swap! *dag* dep/depend parent (keyword
@@ -119,8 +116,6 @@
                                            (first streamspec)
                                            streamspec))))
        (some coll? form) form))))
-
-
 
 (defn def-stream-fn [streamname body]
   (let [streamname (keyword (str *ns*) streamname)]
