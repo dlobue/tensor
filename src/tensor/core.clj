@@ -49,7 +49,10 @@
         (debug "Stream " streamname " yet not in registry")
         (dir-loader (or (namespace streamname)
                         (name streamname)))
-        (get-stream' streamname)))))
+        (if-let [stream (get-stream' streamname)]
+          stream
+          (throw (ex-info (str "Stream " streamname " not found")
+                         {:type :no-stream-found})))))))
 
 (defn load-stream-fn
   ([streamname env]
