@@ -24,26 +24,25 @@
 ;; TODO: see if we can use metadata to ensure that *streams* is always
 ;; an atom containing a map.
 
+(defn- get-stream' [streamname]
+  {:pre [(keyword? streamname)]}
+  ;; if namespace returns nil, that means that no specific
+  ;; stream identifiers were given, and we need to load every
+  ;; stream we find in the namespace
+  (if-not (nil? (namespace streamname))
+    (get @*streams* streamname)
+
+    (->> @*streams*
+         (filter
+          (fn [[k s]]
+            (and (= (namespace k)
+                    (name streamname))
+                 (not (:wildcard-exclude (meta s))))))
+         vals)))
+
+
 (defn get-stream [streamname]
-  (let [streamname (keyword streamname)
-        ;; if namespace returns nil, that means that no specific
-        ;; stream identifiers were given, and we need to load every
-        ;; stream we find in the namespace
-        load-all? (nil? (namespace streamname))
-        get-stream' (if-not load-all?
-                      (fn [sname] (get @*streams* sname))
-                      (fn [stream-ns]
-                        (let [stream-ns (name stream-ns)]
-                          (seq
-                           (filter
-                            (complement
-                             #(:wildcard-exclude (meta %)))
-                            (vals
-                             (filter-keys
-                              (fn [k]
-                                (= (namespace k)
-                                   stream-ns))
-                              @*streams*)))))))]
+  (let [streamname (keyword streamname)]
     (debug "Getting stream " streamname)
     (if-let [stream (get-stream' streamname)]
       stream
