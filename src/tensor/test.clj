@@ -109,14 +109,10 @@
   [opts & call-defs]
   {:pre [(even? (count call-defs))]}
   ;; TODO: ensure test/*results* type is tensor
-  (let [results (deref-reset! test/*results* [])
-        results (filter
-                 (complement #(contains? (set (:ignore-taps opts))
-                                         (first %)))
-                 results)
+  (let [results (->> (deref-reset! test/*results* [])
+                     (remove #((set (:ignore-taps opts)) (first %))))
         calls (partition 2 call-defs)
-        indexed-reports (map-indexed vector results)
-        ]
+        indexed-reports (map-indexed vector results)]
 
     (let [call-count (count calls)
           results-count (count results)]
