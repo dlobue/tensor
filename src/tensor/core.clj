@@ -9,6 +9,7 @@
 
 (defn- pkg-to-path
   [pkg]
+  {:pre [(string? pkg)]}
   (as-> pkg p
         (string/replace p #"-" "_")
         (string/replace p #"\." "/")
@@ -56,6 +57,8 @@
                          {:type :no-stream-found})))))))
 
 (defn- streamspec-walker [transform-fn env]
+  {:pre [(fn? transform-fn)
+         (map? env)]}
   (fn [element]
     (let [[element' & r] (if (list? element) element [element])]
       (if (and (symbol? element')
@@ -100,6 +103,8 @@
                (load-stream-fn streamname env args)))))))
 
 (defn- update-env [opts env]
+  {:pre [(map? opts)
+         (map? env)]}
   (if (empty? opts)
     env
     (if-let [env' (:env opts)]
