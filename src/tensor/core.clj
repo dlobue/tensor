@@ -127,10 +127,9 @@
        (some coll? form) form))))
 
 (defn def-stream-fn [streamname body]
-  (let [streamname (keyword (str *ns*) streamname)]
-    (debug "Creating stream " streamname)
-    (if-not (deref-swap! *streams* assoc streamname body)
-      (warn "Overriding already-existing stream " streamname))))
+  (debug "Creating stream " streamname)
+  (if-not (deref-swap! *streams* assoc streamname body)
+    (warn "Overriding already-existing stream " streamname)))
 
 (defmacro def-stream [streamname & decl]
   ;; TODO: add documentation that explains that the return body must
@@ -138,8 +137,13 @@
   ;; multiple streams in the body they must be surrounded by an `sdo`
   ;; or they will be disregarded.
   ;; TODO: support doc strings on def-stream
-  (prewalk (register-deps (keyword (str *ns*) (name streamname))) decl)
- `(def-stream-fn ~(name streamname)
-    (with-meta (fn ~@decl)
-      ~(merge (meta streamname)
-              (meta decl)))))
+  (let [streamname (keyword (str *ns*) (name streamname))]
+    ;; Create dependency from the namespace to the streams within the
+    ;; namespace in order to support cyclical dependency detection with
+    ;; wildcard loads.
+    (swap! *dag* dep/depend (namespace streamname) streamname)
+    (prewalk (register-deps streamname) decl)
+    `(def-stream-fn ~streamname
+       (with-meta (fn ~@decl)
+         ~(merge (meta streamname)
+                 (meta decl))))))
