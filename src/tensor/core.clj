@@ -1,6 +1,7 @@
 (ns tensor.core
   (:require [clojure.string :as string]
             [clojure.tools.logging :refer :all]
+            [clojure.tools.macro :refer [name-with-attributes]]
             [clojure.walk :refer [prewalk]]
             [com.stuartsierra.dependency :as dep]
             [medley.core :refer [filter-keys deref-swap!]]
@@ -153,14 +154,13 @@
   ;; return a single riemann-compatible stream. That if there are
   ;; multiple streams in the body they must be surrounded by an `sdo`
   ;; or they will be disregarded.
-  ;; TODO: support doc strings on def-stream
-  (let [streamname (keyword (str *ns*) (name streamname))]
+  (let [[streamname decl] (name-with-attributes streamname decl)
+        streamname' (keyword (str *ns*) (name streamname))]
     ;; Create dependency from the namespace to the streams within the
     ;; namespace in order to support cyclical dependency detection with
     ;; wildcard loads.
-    (swap! *dag* dep/depend (namespace streamname) streamname)
-    (prewalk (register-deps streamname) decl)
-    `(def-stream-fn ~streamname
+    (swap! *dag* dep/depend (keyword (namespace streamname')) streamname')
+    (prewalk (register-deps streamname') decl)
+    `(def-stream-fn ~streamname'
        (with-meta (fn ~@decl)
-         ~(merge (meta streamname)
-                 (meta decl))))))
+         ~(meta streamname)))))
