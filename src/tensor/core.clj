@@ -19,6 +19,10 @@
   (debug "Loading package " pkg)
   (load (pkg-to-path pkg)))
 
+(defn- coerce-list [arg]
+  (if-not (sequential? arg)
+    (list arg) arg))
+
 (declare ^:dynamic *dag*)
 (declare ^:dynamic *streams*)
 ;; TODO: see if we can use metadata to ensure that *streams* is always
@@ -72,13 +76,8 @@
   ([streamname env body]
      (let [stream (get-stream streamname)
            body (when-not (empty? body)
-                  (let [b
-                        (prewalk (streamspec-walker load-stream-fn env) body)]
-                    ;; ugh
-                    (if-not (or (vector? b)
-                                (list? b))
-                      (list b)
-                      b)))]
+                  (-> (prewalk (streamspec-walker load-stream-fn env) body)
+                      coerce-list))]
        (debug "Loading stream " streamname)
        (trace "Loading stream " stream " with env: " env)
        (if (coll? stream)
@@ -86,9 +85,7 @@
          (apply stream env body)))))
 
 (defn load-streams-fn [env streamspecs]
-  (let [streamspecs (if (sequential? streamspecs)
-                      streamspecs
-                      [streamspecs])]
+  (let [streamspecs (coerce-list streamspecs)]
     (debug "Loading streams " streamspecs)
     (apply sdo
            (doall
@@ -109,14 +106,8 @@
     (if-let [env' (:env opts)]
       env'
       (let [remover (if-let [env-only (:env-only opts)]
-                      #(select-keys % (if-not (sequential? env-only)
-                                        [env-only]
-                                        env-only))
-                      (let [env-exclude (:env-exclude opts)
-                            env-exclude (if-not (sequential? env-exclude)
-                                          [env-exclude]
-                                          env-exclude)]
-                        #(apply dissoc % env-exclude)))]
+                      #(select-keys % (coerce-list env-only))
+                      #(apply dissoc % (coerce-list (:env-exclude opts))))]
         (-> env
             remover
             (merge (:env-include opts)))))))
