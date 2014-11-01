@@ -74,9 +74,9 @@
            (doall
             (flatten
              (for [streamspec streamspecs
-                   :let [streamname (keyword (if (sequential? streamspec)
-                                               (first streamspec)
-                                               streamspec))
+                   :let [streamname (if (sequential? streamspec)
+                                      (first streamspec)
+                                      streamspec)
                          args (when (sequential? streamspec)
                                 (rest streamspec))]]
                (load-stream-fn streamname env args)))))))
