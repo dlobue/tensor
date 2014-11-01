@@ -122,13 +122,17 @@
             remover
             (merge (:env-include opts)))))))
 
-(defmacro load-streams [& streamnames]
-  (let [symbols (keys &env)
-        env (zipmap (map keyword symbols) symbols)
-        [streamnames opts] (split-with (complement keyword?) streamnames)
-        opts (apply hash-map opts)
-        env (update-env opts env)]
-    `(load-streams-fn ~env '~streamnames)))
+(defn separate-streamspecs-and-opts [args]
+  (let [[streamspecs opts] (split-with (complement keyword?) args)
+        opts (apply hash-map opts)]
+    [streamspecs opts]))
+
+(defmacro load-streams [& args]
+  (let [[streamspecs opts] (separate-streamspecs-and-opts args)
+        env (as-> (keys &env) e
+                  (zipmap (map keyword e) e)
+                  (update-env opts e))]
+    `(load-streams-fn ~env '~streamspecs)))
 
 (defmacro with-reloadable-streams [& body]
   `(binding [*streams* (atom {})
