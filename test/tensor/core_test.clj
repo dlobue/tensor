@@ -80,3 +80,8 @@
                     :env {:blarg :honk}
                     :args nil}]}
            (load-stream-fn 'a/stream {:blarg :honk} '(c/stream))))))
+
+(deftest load-streams-fn-tests
+  (testing "Ensure regression hasn't occurred and load-streams-fn isn't returning a lazy-seq"
+    (with-redefs [load-stream-fn (fn [& _])]
+      (is (realized? (load-streams-fn nil (range 100)))))))

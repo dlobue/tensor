@@ -27,7 +27,7 @@
 
 (defn load-streams-fixture-fn [env stream-names]
   (fn [f]
-    (binding [test/*streams* [(load-streams-fn env stream-names)]]
+    (binding [test/*streams* (coerce-list (load-streams-fn env stream-names))]
       (f))))
 
 (defmacro load-streams-fixture [env & stream-names]

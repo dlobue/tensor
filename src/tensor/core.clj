@@ -19,7 +19,7 @@
   (debug "Loading package " pkg)
   (load (pkg-to-path pkg)))
 
-(defn- coerce-list [arg]
+(defn coerce-list [arg]
   (if-not (sequential? arg)
     (list arg) arg))
 
@@ -87,16 +87,15 @@
 (defn load-streams-fn [env streamspecs]
   (let [streamspecs (coerce-list streamspecs)]
     (debug "Loading streams " streamspecs)
-    (apply sdo
-           (doall
-            (flatten
-             (for [streamspec streamspecs
-                   :let [streamname (if (sequential? streamspec)
-                                      (first streamspec)
-                                      streamspec)
-                         args (when (sequential? streamspec)
-                                (rest streamspec))]]
-               (load-stream-fn streamname env args)))))))
+    (doall
+     (flatten
+      (for [streamspec streamspecs
+            :let [streamname (if (sequential? streamspec)
+                               (first streamspec)
+                               streamspec)
+                  args (when (sequential? streamspec)
+                         (rest streamspec))]]
+        (load-stream-fn streamname env args))))))
 
 (defn- update-env [opts env]
   {:pre [(map? opts)
@@ -122,7 +121,7 @@
         env (as-> (keys &env) e
                   (zipmap (map keyword e) e)
                   (update-env opts e))]
-    `(load-streams-fn ~env '~streamspecs)))
+    `(apply sdo (load-streams-fn ~env '~streamspecs))))
 
 (defmacro with-reloadable-streams [& body]
   `(binding [*streams* (atom {})
