@@ -14,7 +14,7 @@
        (sdo
         prn
         #(swap! tensor.test-harness/test-atom conj ~@env-keys %)))
-     (def-stream-fn ~(str name "-fn")
+     (def-stream-fn ~(keyword (str *ns*) (str name "-fn"))
        (fn [{:keys ~env-keys :as env#} & children#]
          (sdo
           prn

@@ -14,7 +14,7 @@
 (defn setup-stream [f]
   (reset! load-counter-atom 0)
   (with-redefs [clojure.core/load wrapped-load]
-    (binding [*streams* (atom {})]
+    (with-reloadable-streams
       (f))))
 
 (use-fixtures :once setup-stream)
@@ -34,8 +34,7 @@
              s# (with-out-str (real-stream# :event3))
              ;; now run the same test but load the stream with load-streams-fun
              _# (reset! test-atom [])
-             real-stream-fn#
-             (load-streams-fn ~env-map '~stream)
+             real-stream-fn# (load-stream-fn '~stream ~env-map)
              s-fn# (with-out-str (real-stream-fn# :event3))]
          (is (= s# ":event3\n"))
          (is (= s-fn# ":event3\n"))))))
