@@ -143,6 +143,8 @@
        (some coll? form) form))))
 
 (defn def-stream-fn [streamname body]
+  {:pre [(keyword? streamname)
+         (not (nil? (namespace streamname)))]}
   (debug "Creating stream " streamname)
   (if-not (deref-swap! *streams* assoc streamname body)
     (warn "Overriding already-existing stream " streamname)))
