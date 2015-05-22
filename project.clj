@@ -6,6 +6,7 @@
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
                                  [riemann "0.2.6"]]
                    :resource-paths ["test/resources"]}}
+  :plugins [[lein-cloverage "1.0.6"]]
   :dependencies [[org.clojure/tools.logging "0.2.6"]
                  [org.clojure/tools.macro "0.1.2"]
                  [com.stuartsierra/dependency "0.1.1"]
