@@ -35,6 +35,7 @@
                                         :args args})})
                                   [:a/stream
                                    :b/stream
+                                   :b/stream2
                                    :c/stream
                                    :d/stream])))]
 
@@ -64,6 +65,16 @@
             :args nil}
            (load-stream-fn 'a/stream {:blarg :honk})))
 
+    ;; (b/stream b/stream2)
+    (testing "Support loading all streams within a package"
+      (is (= '({:name :b/stream
+                :env {:blarg :honk}
+                :args nil}
+               {:name :b/stream2
+                :env {:blarg :honk}
+                :args nil})
+             (load-stream-fn 'b {:blarg :honk}))))
+
     ;; (a/stream locally-bound-symbol)
     (is (= {:name :a/stream
             :env {:blarg :honk
@@ -79,7 +90,15 @@
             :args [{:name :c/stream
                     :env {:blarg :honk}
                     :args nil}]}
-           (load-stream-fn 'a/stream {:blarg :honk} '(c/stream))))))
+           (load-stream-fn 'a/stream {:blarg :honk} '(c/stream))))
+
+    (testing "Ensure exception is thrown when no stream is found"
+      (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Stream :blarg/stream not found"
+                                (get-stream 'blarg/stream)))
+      (is (= {:type :no-stream-found}
+             (try (get-stream 'blarg/stream)
+                  (catch clojure.lang.ExceptionInfo e
+                    (ex-data e))))))))
 
 (deftest load-streams-fn-tests
   (testing "Ensure regression hasn't occurred and load-streams-fn isn't returning a lazy-seq"

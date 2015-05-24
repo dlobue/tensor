@@ -17,7 +17,12 @@
 
 (defn- dir-loader [pkg]
   (debug "Loading package " pkg)
-  (load (pkg-to-path pkg)))
+  (let [pkg-path (pkg-to-path pkg)]
+    (try (load pkg-path)
+         (catch java.io.FileNotFoundException e
+           (debug (str "Unable to locate class for package " pkg " on the filesystem"))
+           (trace e (str "Exception thrown while searching for module "
+                         pkg ". Expected package here: " pkg-path))))))
 
 (defn coerce-list [arg]
   (if-not (sequential? arg)
