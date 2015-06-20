@@ -23,6 +23,16 @@
          {:env-only :a :env-include {:d :d}} {:a :a :d :d}
          {:env-include {:d :d} :env-exclude :b} {:a :a :c :c :d :d})))
 
+(deftest extract-namespace
+  (testing "extract the namespace from a keyword for a single stream"
+    (is (= "blarg"
+           (#'tensor.core/extract-namespace :blarg/a))))
+  (testing "support 'wildcarding' and stringify the namespace from a keyword that doesn't contain a specific stream"
+    (is (= "honk"
+           (#'tensor.core/extract-namespace :honk))))
+  (testing "fail in a predictable manner if we aren't given the type of input we expect"
+    (is (thrown? AssertionError
+                 (#'tensor.core/extract-namespace 'honk)))))
 
 (deftest resolve-and-load-streamspec
   (binding [*streams* (atom (into
