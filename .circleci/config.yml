@@ -22,7 +22,7 @@ jobs:
           key: tensor-{{ checksum "project.clj" }}
       - run: |-
          lein trampoline test
-         lein do cloverage -o {{ .Environment.CIRCLE_ARTIFACTS }} --coveralls, coveralls {{ .Environment.CIRCLE_ARTIFACTS }}/coveralls.json
+         lein do cloverage -o ${CIRCLE_ARTIFACTS} --coveralls, coveralls ${CIRCLE_ARTIFACTS}/coveralls.json
       # Teardown
       #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
       # Save test results
