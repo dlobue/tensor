@@ -12,7 +12,7 @@ jobs:
       JVM_OPTS: -Xmx3200m
     steps:
       - checkout
-      - run: mkdir -p ${CIRCLE_ARTIFACTS} ${CIRCLE_TEST_REPORTS}
+      - run: mkdir -p {{ .Environment.CIRCLE_ARTIFACTS }} {{ .Environment.CIRCLE_TEST_REPORTS }}
       - restore_cache:
           key: tensor-{{ checksum "project.clj" }}
       - run: lein deps
@@ -22,7 +22,7 @@ jobs:
           key: tensor-{{ checksum "project.clj" }}
       - run: |-
          lein trampoline test
-         lein do cloverage -o ${CIRCLE_ARTIFACTS} --coveralls, coveralls ${CIRCLE_ARTIFACTS}/coveralls.json
+         lein do cloverage -o {{ .Environment.CIRCLE_ARTIFACTS }} --coveralls, coveralls {{ .Environment.CIRCLE_ARTIFACTS }}/coveralls.json
       # Teardown
       #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
       # Save test results
