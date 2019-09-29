@@ -17,7 +17,12 @@
 
 (defn- dir-loader [pkg]
   (debug "Loading package " pkg)
-  (load (pkg-to-path pkg)))
+  (let [pkg-path (pkg-to-path pkg)]
+    (try (load pkg-path)
+         (catch java.io.FileNotFoundException e
+           (debug (str "Unable to locate class for package " pkg " on the filesystem"))
+           (trace e (str "Exception thrown while searching for module "
+                         pkg ". Expected package here: " pkg-path))))))
 
 (defn coerce-list [arg]
   (if-not (sequential? arg)
@@ -44,6 +49,12 @@
                  (not (:wildcard-exclude (meta s))))))
          vals)))
 
+(defn- extract-namespace
+  "Get the namespace of the desired stream. Also support bare namespaces for wildcarding."
+  [streamname]
+  {:pre [(keyword? streamname)]}
+  (or (namespace streamname)
+      (name streamname)))
 
 (defn get-stream [streamname]
   (let [streamname (keyword streamname)]
@@ -52,8 +63,7 @@
       stream
       (do
         (debug "Stream " streamname " yet not in registry")
-        (dir-loader (or (namespace streamname)
-                        (name streamname)))
+        (dir-loader (extract-namespace streamname))
         (if-let [stream (get-stream' streamname)]
           stream
           (throw (ex-info (str "Stream " streamname " not found")

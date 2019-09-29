@@ -1,0 +1,35 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/tensor
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+    environment:
+      LEIN_ROOT: nbd
+      JVM_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - run: mkdir -p {{ .Environment.CIRCLE_ARTIFACTS }} {{ .Environment.CIRCLE_TEST_REPORTS }}
+      - restore_cache:
+          key: tensor-{{ checksum "project.clj" }}
+      - run: lein deps
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: tensor-{{ checksum "project.clj" }}
+      - run: |-
+         lein trampoline test
+         lein do cloverage -o ${CIRCLE_ARTIFACTS} --coveralls, coveralls ${CIRCLE_ARTIFACTS}/coveralls.json
+      # Teardown
+      #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
+      # Save test results
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      # Save artifacts
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
